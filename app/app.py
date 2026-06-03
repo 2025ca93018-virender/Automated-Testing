@@ -1,6 +1,9 @@
 import os
 import requests
+from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, flash
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get(
@@ -117,6 +120,7 @@ if __name__ == "__main__":
         "HF Token Loaded:",
         "YES" if HF_API_TOKEN else "NO"
     )
+    app.run(host="0.0.0.0", port=5000)
 
     app.run(
         host="0.0.0.0",
