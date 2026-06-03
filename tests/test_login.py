@@ -8,6 +8,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 BASE_URL = "http://localhost:5000"
 LOGIN_URL = f"{BASE_URL}/login"
+QA_URL = f"{BASE_URL}/qa"
 VALID_USERNAME = "admin"
 VALID_PASSWORD = "admin123"
 

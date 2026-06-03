@@ -29,7 +29,7 @@ pipeline {
             steps {
                 sh '''
                     . ${VENV_DIR}/bin/activate
-                    nohup python app/app.py > app.log 2>&1 &
+                    nohup python3 app/app.py > app.log 2>&1 &
                     echo $! > app.pid
                     # Wait until the app is ready
                     for i in $(seq 1 15); do
