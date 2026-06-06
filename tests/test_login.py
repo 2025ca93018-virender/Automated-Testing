@@ -75,9 +75,14 @@ class TestLogin:
         answer_box = WebDriverWait(driver, 30).until(
             EC.visibility_of_element_located((By.ID, "answer-box"))
         )
-        answer_text = driver.find_element(By.ID, "answer-text").text
-        assert answer_box.is_displayed()
-        assert len(answer_text.strip()) > 0
+        answer_text = driver.find_element(By.ID, "answer-text").text.strip()
+        assert len(answer_text) > 50, f"Answer too short or is an error: {answer_text}"
+        assert not any(err in answer_text for err in [
+            "Error contacting LLM",
+            "not configured",
+            "Unexpected error",
+            "HF_API_TOKEN",
+        ]), f"LLM returned an error response: {answer_text}"
 
     def test_protected_route_redirects(self, driver):
         """Accessing /qa without login redirects to the login page."""
