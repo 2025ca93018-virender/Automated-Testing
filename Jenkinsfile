@@ -29,15 +29,16 @@ pipeline {
             steps {
                 powershell '''
                     $pythonExe = Join-Path $env:WORKSPACE "$env:VENV_DIR\\Scripts\\python.exe"
-                    $proc = Start-Process -FilePath $pythonExe `
-                        -ArgumentList "app/app.py" `
-                        -PassThru -NoNewWindow `
-                        -RedirectStandardOutput (Join-Path $env:WORKSPACE "app.log") `
-                        -RedirectStandardError  (Join-Path $env:WORKSPACE "app_err.log") `
-                        -WorkingDirectory $env:WORKSPACE
+                    $appScript = Join-Path $env:WORKSPACE "app\\app.py"
+                    $logOut    = Join-Path $env:WORKSPACE "app.log"
+                    # Launch via cmd.exe using Start-Process default (ShellExecute) so the
+                    # Flask child does NOT inherit Jenkins' output pipe (which would hang the step).
+                    $cmdArgs = '/c ""' + $pythonExe + '" "' + $appScript + '" > "' + $logOut + '" 2>&1"'
+                    $proc = Start-Process -FilePath "cmd.exe" -ArgumentList $cmdArgs `
+                        -WorkingDirectory $env:WORKSPACE -WindowStyle Hidden -PassThru
                     $proc.Id | Out-File (Join-Path $env:WORKSPACE "app.pid") -Encoding ascii -NoNewline
                     $ready = $false
-                    for ($i = 0; $i -lt 15; $i++) {
+                    for ($i = 0; $i -lt 30; $i++) {
                         try {
                             Invoke-WebRequest -Uri http://localhost:5000/login -UseBasicParsing -ErrorAction Stop | Out-Null
                             $ready = $true
@@ -46,7 +47,7 @@ pipeline {
                             Start-Sleep -Seconds 1
                         }
                     }
-                    if (-not $ready) { throw "App did not start within 15 seconds" }
+                    if (-not $ready) { throw "App did not start within 30 seconds" }
                 '''
             }
         }
@@ -70,8 +71,9 @@ pipeline {
                 $pidFile = Join-Path $env:WORKSPACE "app.pid"
                 if (Test-Path $pidFile) {
                     $appPid = Get-Content $pidFile
-                    Stop-Process -Id $appPid -Force -ErrorAction SilentlyContinue
-                    Remove-Item $pidFile -Force
+                    # Kill the whole tree (cmd.exe launcher + python child).
+                    cmd /c "taskkill /PID $appPid /T /F" 2>$null
+                    Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
                 }
             '''
             junit 'results.xml'
@@ -83,7 +85,7 @@ pipeline {
                 reportFiles          : 'report.html',
                 reportName           : 'Selenium Test Report'
             ])
-            archiveArtifacts artifacts: 'app.log,app_err.log', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'app.log', allowEmptyArchive: true
         }
         success {
             echo 'All tests passed!'
