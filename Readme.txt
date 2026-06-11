@@ -134,6 +134,48 @@ for the full visual test report.
 
 
 -------------------------------------------------------
+STEP 8 — RUN THE JENKINS PIPELINE LOCALLY (optional)
+-------------------------------------------------------
+
+This repo ships a reproducible local Jenkins setup so
+anyone can run the Jenkinsfile and generate the report
+on their own machine. No manual Jenkins configuration
+is needed.
+
+What you need:
+  - Java 17 or 21 (Temurin JDK) → https://adoptium.net
+  - Your .env with HF_API_TOKEN (from Step 4)
+
+Run it (Windows PowerShell, from the project root):
+
+  .\jenkins\setup-jenkins.ps1
+
+The script automatically:
+  - Downloads Jenkins LTS into .\jenkins\
+  - Installs the required plugins
+  - Creates the HF_API_TOKEN credential from your .env
+  - Creates the "Automated-Testing" pipeline job that
+    builds the Jenkinsfile from your git remote
+  - Starts Jenkins at http://localhost:8080
+
+Then:
+  1. Open http://localhost:8080
+  2. Open the "Automated-Testing" job → click "Build Now"
+  3. When the build succeeds, open "Selenium Test Report"
+     on the build page for the HTML report.
+
+Notes:
+  - The pipeline runs on Windows (it uses bat/powershell
+    steps), so run Jenkins on a Windows machine.
+  - The job builds the commit pushed to your git remote,
+    so push your changes before building.
+  - Use a different port with:  .\jenkins\setup-jenkins.ps1 -Port 9090
+  - The generated jenkins\home\ folder is gitignored.
+
+=======================================================
+
+
+-------------------------------------------------------
 TROUBLESHOOTING
 -------------------------------------------------------
 
