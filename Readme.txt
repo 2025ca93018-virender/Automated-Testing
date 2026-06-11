@@ -165,12 +165,57 @@ Then:
      on the build page for the HTML report.
 
 Notes:
-  - The pipeline runs on Windows (it uses bat/powershell
-    steps), so run Jenkins on a Windows machine.
+  - The pipeline is cross-platform: it auto-detects the
+    OS (isUnix()) and uses bat/powershell on Windows or
+    sh on Linux/macOS. This local script targets Windows.
   - The job builds the commit pushed to your git remote,
     so push your changes before building.
   - Use a different port with:  .\jenkins\setup-jenkins.ps1 -Port 9090
   - The generated jenkins\home\ folder is gitignored.
+
+=======================================================
+
+
+STEP 9 — RUN JENKINS GLOBALLY ON AWS EC2 (optional)
+-------------------------------------------------------
+
+To run Jenkins on an always-on server reachable over the
+internet (instead of localhost), use the EC2 bootstrap
+script. It targets a fresh Ubuntu instance.
+
+What you need:
+  - An Ubuntu EC2 instance with SSH access
+  - Your HF_API_TOKEN value (from Step 4)
+
+On the EC2 instance (NOT your laptop), run:
+
+  curl -fsSL https://raw.githubusercontent.com/2025ca93099/Automated-Testing/master/jenkins/setup-jenkins-ec2.sh -o setup-jenkins-ec2.sh
+  chmod +x setup-jenkins-ec2.sh
+  sudo ./setup-jenkins-ec2.sh
+
+The script installs Java 21, Jenkins LTS (as a systemd
+service), Python 3, and headless Google Chrome, then
+prints the URL and the initial admin password.
+
+Then:
+  1. In AWS, open inbound TCP port 8080 in the instance's
+     Security Group (Source 0.0.0.0/0, or your IP).
+  2. Open http://<EC2_PUBLIC_IP>:8080 and finish the
+     setup wizard (Install suggested plugins).
+  3. Install plugins: workflow-aggregator, git, junit,
+     htmlpublisher, credentials-binding, plain-credentials.
+  4. Add a 'Secret text' credential, ID = HF_API_TOKEN.
+  5. New Item > Pipeline > 'Pipeline script from SCM' > Git
+     Repo:   https://github.com/2025ca93099/Automated-Testing.git
+     Branch: master    Script Path: Jenkinsfile
+  6. Build Now → open 'Selenium Test Report' on the build.
+
+Notes:
+  - Jenkins keeps running across reboots (systemd service).
+  - Because it's reachable from the internet, secure it:
+    create a real admin user and restrict the Security
+    Group to trusted IPs.
+  - The Jenkinsfile runs the Linux (sh) branch on EC2.
 
 =======================================================
 
