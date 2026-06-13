@@ -1,8 +1,0 @@
-# Plugins required by the Automated-Testing pipeline.
-# Dependencies are resolved automatically by the Jenkins Plugin Manager.
-workflow-aggregator
-git
-junit
-htmlpublisher
-credentials-binding
-plain-credentials
