@@ -152,5 +152,3 @@ ModuleNotFoundError
   → Make sure the venv is activated before running anything
 
 =======================================================
-
-dummy change to readme file
